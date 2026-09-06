@@ -23,6 +23,8 @@ interface FormState {
   residency: Residency;
   hasHelpDebt: boolean;
   privateHospitalCover: boolean;
+  bonus: string;
+  otherIncome: string;
 }
 
 const DEFAULT_STATE: FormState = {
@@ -32,7 +34,11 @@ const DEFAULT_STATE: FormState = {
   residency: 'resident',
   hasHelpDebt: false,
   privateHospitalCover: true,
+  bonus: '',
+  otherIncome: '',
 };
+
+const toNumber = (s: string) => parseFloat(s.replace(/[^0-9.]/g, '')) || 0;
 
 function readInitialState(): FormState {
   const params = new URLSearchParams(window.location.search);
@@ -49,6 +55,8 @@ function readInitialState(): FormState {
     if (r === 'res') out.residency = 'resident';
     if (params.get('help') === '1') out.hasHelpDebt = true;
     if (params.get('phc') === '0') out.privateHospitalCover = false;
+    if (params.has('bonus')) out.bonus = params.get('bonus') || '';
+    if (params.has('other')) out.otherIncome = params.get('other') || '';
     return out;
   };
 
@@ -67,7 +75,9 @@ export default function App() {
   const [state, setState] = useState<FormState>(readInitialState);
   const [copied, setCopied] = useState(false);
 
-  const numericAmount = parseFloat(state.amount.replace(/[^0-9.]/g, '')) || 0;
+  const numericAmount = toNumber(state.amount);
+  const numericBonus = toNumber(state.bonus);
+  const numericOther = toNumber(state.otherIncome);
 
   const input: TaxInput = useMemo(
     () => ({
@@ -77,8 +87,19 @@ export default function App() {
       residency: state.residency,
       hasHelpDebt: state.hasHelpDebt,
       privateHospitalCover: state.privateHospitalCover,
+      bonus: numericBonus,
+      otherIncome: numericOther,
     }),
-    [numericAmount, state.basis, state.period, state.residency, state.hasHelpDebt, state.privateHospitalCover],
+    [
+      numericAmount,
+      numericBonus,
+      numericOther,
+      state.basis,
+      state.period,
+      state.residency,
+      state.hasHelpDebt,
+      state.privateHospitalCover,
+    ],
   );
 
   const result = useMemo(() => calculate(input), [input]);
@@ -96,9 +117,11 @@ export default function App() {
     params.set('res', state.residency === 'non-resident' ? 'non' : 'res');
     if (state.hasHelpDebt) params.set('help', '1');
     if (!state.privateHospitalCover) params.set('phc', '0');
+    if (numericBonus > 0) params.set('bonus', String(Math.round(numericBonus)));
+    if (numericOther > 0) params.set('other', String(Math.round(numericOther)));
     window.history.replaceState(null, '', `?${params.toString()}`);
     setCopied(false);
-  }, [state, numericAmount]);
+  }, [state, numericAmount, numericBonus, numericOther]);
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setState((s) => ({ ...s, [key]: value }));
@@ -112,6 +135,12 @@ export default function App() {
 
   const breakdown = [
     { label: 'Gross salary', value: result.grossSalary, kind: 'gross' as const },
+    ...(result.bonus > 0
+      ? [{ label: 'Bonus', value: result.bonus, kind: 'gross' as const }]
+      : []),
+    ...(result.otherIncome > 0
+      ? [{ label: 'Other taxable income', value: result.otherIncome, kind: 'gross' as const }]
+      : []),
     { label: 'Income tax', value: -result.incomeTax, kind: 'tax' as const },
     { label: 'Medicare levy', value: -result.medicareLevy, kind: 'tax' as const },
     ...(result.medicareLevySurcharge > 0
@@ -204,6 +233,41 @@ export default function App() {
               number already has the 12% super baked in.
             </p>
           </fieldset>
+
+          <div className="field two-up">
+            <label>
+              <span className="field-label">Annual bonus</span>
+              <div className="amount-row">
+                <span className="prefix">$</span>
+                <input
+                  inputMode="decimal"
+                  autoComplete="off"
+                  aria-label="Annual bonus before tax"
+                  value={state.bonus}
+                  onChange={(e) => set('bonus', e.target.value)}
+                  placeholder="0"
+                />
+              </div>
+            </label>
+            <label>
+              <span className="field-label">Other income / year</span>
+              <div className="amount-row">
+                <span className="prefix">$</span>
+                <input
+                  inputMode="decimal"
+                  autoComplete="off"
+                  aria-label="Other annual taxable income"
+                  value={state.otherIncome}
+                  onChange={(e) => set('otherIncome', e.target.value)}
+                  placeholder="0"
+                />
+              </div>
+            </label>
+          </div>
+          <p className="hint">
+            Bonus is a gross yearly amount (super is added on top). "Other income" is anything
+            else taxable — a second job, interest, dividends, rent or side work — with no super.
+          </p>
 
           <fieldset className="field">
             <legend className="field-label">Residency for tax purposes</legend>
@@ -304,6 +368,14 @@ export default function App() {
             </tbody>
           </table>
 
+          {result.bonus > 0 && (
+            <p className="bonus-note">
+              You keep <strong>{formatCurrency(result.bonusTakeHome)}</strong> of your{' '}
+              {formatCurrency(result.bonus)} bonus — {formatPercent(result.bonusTakeHome / result.bonus)}{' '}
+              after tax.
+            </p>
+          )}
+
           <div className="rates">
             <div>
               <strong>{formatPercent(result.averageTaxRate)}</strong>
@@ -323,8 +395,8 @@ export default function App() {
 
       <p className="disclaimer">
         Estimates for the {TAX_YEAR} financial year using standard ATO rates for a full-year
-        resident with no other income or deductions. Ignores tax offsets other than LITO, the
-        low-income Medicare reduction for families, and payroll rounding. General information
+        resident. Assumes no deductions, treats "other income" as fully taxable with no offsets,
+        and ignores the family Medicare reduction and payroll rounding. General information
         only — not tax advice.
       </p>
     </div>

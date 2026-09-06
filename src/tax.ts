@@ -58,12 +58,19 @@ export interface TaxInput {
   hasHelpDebt: boolean;
   /** If false and income is high enough, the Medicare Levy Surcharge is added. */
   privateHospitalCover: boolean;
+  /** Annual gross bonus (cash, before tax). Employer super is added on top at 12%. */
+  bonus?: number;
+  /** Other annual taxable income (interest, dividends, rent, side work). No super. */
+  otherIncome?: number;
 }
 
 export interface TaxResult {
-  grossSalary: number; // annual cash salary (taxable), before tax, excluding super
-  superContribution: number; // annual employer super guarantee
-  totalPackage: number; // grossSalary + super
+  grossSalary: number; // annual base salary (taxable), before tax, excluding super
+  bonus: number; // annual gross bonus included in the estimate
+  otherIncome: number; // other annual taxable income included in the estimate
+  taxableIncome: number; // grossSalary + bonus + otherIncome
+  superContribution: number; // annual employer super guarantee (on salary + bonus)
+  totalPackage: number; // grossSalary + bonus + super
   incomeTax: number; // after LITO
   lito: number; // offset actually applied
   medicareLevy: number;
@@ -74,7 +81,9 @@ export interface TaxResult {
   takeHomeMonthly: number;
   takeHomeFortnightly: number;
   takeHomeWeekly: number;
-  averageTaxRate: number; // totalTax / grossSalary
+  /** After-tax value of the bonus (extra take-home vs. the same inputs without the bonus). */
+  bonusTakeHome: number;
+  averageTaxRate: number; // totalTax / taxableIncome
   marginalTaxRate: number; // top marginal rate incl. 2% medicare where relevant
 }
 
@@ -134,48 +143,80 @@ function marginalRate(taxable: number, brackets: Bracket[], residency: Residency
   return rate;
 }
 
+interface TaxBreakdown {
+  incomeTax: number;
+  litoApplied: number;
+  medicareLevy: number;
+  medicareLevySurcharge: number;
+  helpRepayment: number;
+  totalTax: number;
+}
+
+/** All tax and levies payable on a given taxable income for the chosen inputs. */
+function taxOn(taxable: number, input: TaxInput, brackets: Bracket[]): TaxBreakdown {
+  const isResident = input.residency === 'resident';
+  const rawIncomeTax = bracketTax(taxable, brackets);
+  const lito = isResident ? calcLito(taxable) : 0;
+  const incomeTax = Math.max(0, rawIncomeTax - lito);
+  const medicareLevy = isResident ? calcMedicareLevy(taxable) : 0;
+  const medicareLevySurcharge = isResident
+    ? calcMLS(taxable, input.privateHospitalCover)
+    : 0;
+  const helpRepayment = calcHelpRepayment(taxable, input.hasHelpDebt);
+  return {
+    incomeTax,
+    litoApplied: rawIncomeTax - incomeTax,
+    medicareLevy,
+    medicareLevySurcharge,
+    helpRepayment,
+    totalTax: incomeTax + medicareLevy + medicareLevySurcharge + helpRepayment,
+  };
+}
+
 export function calculate(input: TaxInput): TaxResult {
   const annualInput = Math.max(0, input.amount) * PERIODS_PER_YEAR[input.period];
+  const bonus = Math.max(0, input.bonus ?? 0);
+  const otherIncome = Math.max(0, input.otherIncome ?? 0);
 
   const grossSalary =
     input.basis === 'includesSuper'
       ? annualInput / (1 + SUPER_GUARANTEE_RATE)
       : annualInput;
-  const superContribution = grossSalary * SUPER_GUARANTEE_RATE;
-  const totalPackage = grossSalary + superContribution;
 
-  const taxable = grossSalary; // no deductions or other income assumed
+  const employmentCash = grossSalary + bonus;
+  const superContribution = employmentCash * SUPER_GUARANTEE_RATE;
+  const taxableIncome = employmentCash + otherIncome;
+  const totalPackage = employmentCash + superContribution;
+
   const brackets = input.residency === 'resident' ? RESIDENT_BRACKETS : NON_RESIDENT_BRACKETS;
 
-  const rawIncomeTax = bracketTax(taxable, brackets);
-  const lito = input.residency === 'resident' ? calcLito(taxable) : 0;
-  const incomeTax = Math.max(0, rawIncomeTax - lito);
-  const litoApplied = rawIncomeTax - incomeTax;
+  const t = taxOn(taxableIncome, input, brackets);
+  const takeHomeAnnual = taxableIncome - t.totalTax;
 
-  const medicareLevy = input.residency === 'resident' ? calcMedicareLevy(taxable) : 0;
-  const medicareLevySurcharge =
-    input.residency === 'resident' ? calcMLS(taxable, input.privateHospitalCover) : 0;
-  const helpRepayment = calcHelpRepayment(taxable, input.hasHelpDebt);
-
-  const totalTax = incomeTax + medicareLevy + medicareLevySurcharge + helpRepayment;
-  const takeHomeAnnual = grossSalary - totalTax;
+  // After-tax value of the bonus = extra take-home vs. the same inputs without it.
+  const withoutBonus = taxOn(grossSalary + otherIncome, input, brackets);
+  const bonusTakeHome = bonus > 0 ? bonus - (t.totalTax - withoutBonus.totalTax) : 0;
 
   return {
     grossSalary,
+    bonus,
+    otherIncome,
+    taxableIncome,
     superContribution,
     totalPackage,
-    incomeTax,
-    lito: litoApplied,
-    medicareLevy,
-    medicareLevySurcharge,
-    helpRepayment,
-    totalTax,
+    incomeTax: t.incomeTax,
+    lito: t.litoApplied,
+    medicareLevy: t.medicareLevy,
+    medicareLevySurcharge: t.medicareLevySurcharge,
+    helpRepayment: t.helpRepayment,
+    totalTax: t.totalTax,
     takeHomeAnnual,
     takeHomeMonthly: takeHomeAnnual / 12,
     takeHomeFortnightly: takeHomeAnnual / 26,
     takeHomeWeekly: takeHomeAnnual / 52,
-    averageTaxRate: grossSalary > 0 ? totalTax / grossSalary : 0,
-    marginalTaxRate: marginalRate(taxable, brackets, input.residency),
+    bonusTakeHome,
+    averageTaxRate: taxableIncome > 0 ? t.totalTax / taxableIncome : 0,
+    marginalTaxRate: marginalRate(taxableIncome, brackets, input.residency),
   };
 }
 

@@ -186,6 +186,34 @@ body {
   margin: 8px 2px 0;
 }
 
+.two-up {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 0;
+}
+
+.two-up + .hint {
+  margin-bottom: 20px;
+}
+
+.two-up label {
+  min-width: 0;
+}
+
+.bonus-note {
+  margin: 14px 0 0;
+  padding: 10px 12px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  font-size: 0.9rem;
+}
+
+.bonus-note strong {
+  color: var(--home);
+}
+
 .checkbox {
   display: flex;
   align-items: center;
