@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en-AU">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#1b6ef3" />
+
+    <title>Australian Take-Home Pay Calculator 2026-27 | After-Tax Salary</title>
+    <meta
+      name="description"
+      content="Free Australian salary calculator for the 2026-27 financial year. Work out your take-home pay after income tax, Medicare levy, HECS/HELP and super — per year, month, fortnight or week."
+    />
+    <link rel="canonical" href="https://salary-calculator-au.pages.dev/" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Australian Take-Home Pay Calculator 2026-27" />
+    <meta
+      property="og:description"
+      content="See exactly what lands in your bank account after tax, Medicare and HECS for the 2026-27 financial year."
+    />
+    <meta property="og:url" content="https://salary-calculator-au.pages.dev/" />
+    <meta property="og:image" content="https://salary-calculator-au.pages.dev/og.svg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Australian Take-Home Pay Calculator 2026-27" />
+    <meta
+      name="twitter:description"
+      content="Work out your after-tax salary for the 2026-27 financial year — tax, Medicare, HECS and super."
+    />
+    <meta name="twitter:image" content="https://salary-calculator-au.pages.dev/og.svg" />
+
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Australian Take-Home Pay Calculator",
+        "url": "https://salary-calculator-au.pages.dev/",
+        "applicationCategory": "FinanceApplication",
+        "operatingSystem": "Any",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "AUD" },
+        "description": "Calculate your Australian take-home pay after income tax, Medicare levy, HECS/HELP repayments and superannuation for the 2026-27 financial year."
+      }
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "How much tax do I pay on $90,000 in Australia?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "For the 2026-27 financial year a resident earning $90,000 pays about $17,520 in income tax plus a $1,800 Medicare levy, for a take-home of roughly $70,680 a year (about $2,719 a fortnight). Super of $10,800 is paid by your employer on top."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What are the Australian income tax rates for 2026-27?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Residents pay 0% up to $18,200, 15% from $18,201 to $45,000, 30% from $45,001 to $135,000, 37% from $135,001 to $190,000 and 45% above $190,000. A 2% Medicare levy applies to most taxable income."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Does this calculator include HECS and HELP repayments?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. Tick the study debt box and it applies the 2026-27 marginal HELP repayment system: nothing below $69,528, then 15c per dollar above that and 17c per dollar above $129,717."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Is salary usually quoted including or excluding super?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Most Australian job ads quote salary plus superannuation, so a $100,000 salary means $100,000 cash plus $12,000 super. Some contracts quote a total package that already includes super. This calculator lets you choose."
+            }
+          }
+        ]
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+
+    <section class="seo">
+      <h2>How the Australian take-home pay calculator works</h2>
+      <p>
+        Enter your salary and this tool estimates your net (after-tax) pay for the
+        <strong>2026-27 financial year</strong> — 1 July 2026 to 30 June 2027. It subtracts
+        income tax, the 2% Medicare levy, any Medicare levy surcharge, and compulsory HECS/HELP
+        repayments, and applies the Low Income Tax Offset automatically. Superannuation paid by
+        your employer (12%) is shown separately because it goes to your super fund, not your bank
+        account.
+      </p>
+
+      <h2>2026-27 resident income tax rates</h2>
+      <table>
+        <thead>
+          <tr><th>Taxable income</th><th>Tax on this income</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>$0 – $18,200</td><td>Nil</td></tr>
+          <tr><td>$18,201 – $45,000</td><td>15c for each $1 over $18,200</td></tr>
+          <tr><td>$45,001 – $135,000</td><td>$4,020 plus 30c for each $1 over $45,000</td></tr>
+          <tr><td>$135,001 – $190,000</td><td>$31,020 plus 37c for each $1 over $135,000</td></tr>
+          <tr><td>$190,001 and over</td><td>$51,370 plus 45c for each $1 over $190,000</td></tr>
+        </tbody>
+      </table>
+      <p>
+        The 15% rate replaced the previous 16% rate on 1 July 2026 and is legislated to fall
+        again to 14% from 1 July 2027. Medicare levy of 2% is on top of these rates for most
+        earners.
+      </p>
+
+      <h2>Frequently asked questions</h2>
+      <h3>How much is take-home pay on $100,000 in Australia?</h3>
+      <p>
+        A resident on a $100,000 salary in 2026-27 keeps roughly $77,480 a year after income tax
+        and the Medicare levy — about $2,980 per fortnight — with $12,000 of super paid on top by
+        the employer. Add a HECS/HELP debt and the repayment reduces take-home by around $4,571 a
+        year.
+      </p>
+      <h3>What is the difference between salary and total package?</h3>
+      <p>
+        Salary (or "base" / "salary + super") is your cash pay before the employer's 12%
+        superannuation contribution. Total remuneration package includes that super. Switching
+        the toggle changes your taxable income and your take-home pay.
+      </p>
+      <h3>Is this an official ATO calculator?</h3>
+      <p>
+        No. It is a free independent tool that uses published ATO rates and thresholds for a
+        standard full-year resident with no other income or deductions. For an exact figure use
+        the ATO's own income tax estimator or speak to a registered tax agent.
+      </p>
+
+      <footer>
+        Not affiliated with the Australian Taxation Office. General information only, not
+        financial or tax advice.
+      </footer>
+    </section>
+  </body>
+</html>

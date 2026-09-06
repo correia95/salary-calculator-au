@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://salary-calculator-au.pages.dev/sitemap.xml
