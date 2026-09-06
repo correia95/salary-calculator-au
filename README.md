@@ -5,13 +5,13 @@ net pay after income tax, Medicare levy, Medicare levy surcharge, HECS/HELP repa
 Low Income Tax Offset — per year, month, fortnight or week. 100% client-side, no backend, no
 tracking.
 
-**Live:** https://salary-calculator-au.pages.dev/
+**Live:** https://salary-calculator-au.correia95.workers.dev/
 
 ## Stack
 
 - React 18 + TypeScript + Vite
 - No runtime dependencies beyond React
-- Deploys as a static site to Cloudflare Pages
+- Deploys as a static-assets Cloudflare Worker (`wrangler.jsonc`, no Worker code)
 
 ## Develop
 
@@ -27,16 +27,20 @@ npm run build   # outputs to dist/
 npm run preview
 ```
 
-## Deploy (Cloudflare Pages)
+## Deploy (Cloudflare Workers)
 
-1. Push to GitHub (already configured).
-2. Cloudflare dashboard → **Workers & Pages** → **Create** → **Pages** → **Connect to Git**.
-3. Pick the `salary-calculator-au` repo.
-4. Build settings:
-   - Framework preset: **Vite**
-   - Build command: `npm run build`
-   - Build output directory: `dist`
-5. Save & Deploy. Subsequent pushes to `main` auto-deploy.
+Live at **https://salary-calculator-au.correia95.workers.dev**.
+
+```bash
+npm run deploy   # = npm run build && wrangler deploy
+```
+
+`wrangler deploy` reads `CLOUDFLARE_API_TOKEN` from the environment (set in the machine's
+Claude Code user settings). Config is [`wrangler.jsonc`](wrangler.jsonc) — static assets from
+`dist/`, no Worker code.
+
+Pushes to `main` also auto-deploy via [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml)
+once the repo has the `CLOUDFLARE_ENABLED=true` variable and `CLOUDFLARE_API_TOKEN` secret.
 
 If you later attach a custom domain, update the canonical/OG URLs in `index.html`,
 `public/robots.txt` and `public/sitemap.xml`.
